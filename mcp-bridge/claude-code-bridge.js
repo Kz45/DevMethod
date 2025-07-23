@@ -3,20 +3,58 @@
 /**
  * Claude Code to Claude Desktop MCP Bridge
  * Allows Claude Code (WSL) to access Claude Desktop MCPs (Windows)
+ * 
+ * Generic version - Configure paths for your system
  */
 
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 class MCPBridge {
   constructor() {
-    this.configPath = '/mnt/c/Users/Stanis/AppData/Roaming/Claude/claude_desktop_config.json';
+    // Auto-detect configuration path based on OS
+    this.configPath = this.detectConfigPath();
     this.mcpServers = {};
     this.isWindows = process.platform === 'win32';
+    this.username = process.env.USER || process.env.USERNAME || 'user';
+  }
+
+  detectConfigPath() {
+    const homeDir = os.homedir();
+    const possiblePaths = [
+      // WSL accessing Windows config
+      `/mnt/c/Users/${this.username}/AppData/Roaming/Claude/claude_desktop_config.json`,
+      // Direct Windows access
+      `${homeDir}/AppData/Roaming/Claude/claude_desktop_config.json`,
+      // macOS
+      `${homeDir}/Library/Application Support/Claude/claude_desktop_config.json`,
+      // Linux
+      `${homeDir}/.config/claude/claude_desktop_config.json`,
+      // Generic fallback
+      `${homeDir}/.claude/claude_desktop_config.json`
+    ];
+
+    for (const configPath of possiblePaths) {
+      if (fs.existsSync(configPath)) {
+        console.log(`✅ Found Claude Desktop configuration: ${configPath}`);
+        return configPath;
+      }
+    }
+
+    console.error('❌ Claude Desktop configuration not found.');
+    console.log('Searched in:');
+    possiblePaths.forEach(p => console.log(`  - ${p}`));
+    console.log('\nPlease ensure Claude Desktop is installed and configured with MCPs.');
+    return null;
   }
 
   async loadConfiguration() {
+    if (!this.configPath) {
+      return false;
+    }
+
     try {
       const configData = fs.readFileSync(this.configPath, 'utf8');
       const config = JSON.parse(configData);
@@ -31,14 +69,27 @@ class MCPBridge {
 
   translatePaths(args) {
     return args.map(arg => {
-      // Convert Windows paths to WSL paths
-      if (arg.startsWith('/Users/Stanis/')) {
-        return arg.replace('/Users/Stanis/', '/mnt/c/Users/Stanis/');
-      }
-      // Convert other common Windows paths
-      if (arg.startsWith('C:\\')) {
+      // Convert common Windows paths to WSL paths
+      if (arg.includes('Users\\') && arg.includes('C:\\')) {
         return '/mnt/c/' + arg.slice(3).replace(/\\/g, '/');
       }
+      
+      // Convert macOS-style paths to appropriate system paths
+      if (arg.startsWith('/Users/')) {
+        if (process.platform === 'win32') {
+          // On Windows, assume WSL
+          return arg.replace('/Users/', '/mnt/c/Users/');
+        }
+        // On Unix systems, keep as-is or adapt as needed
+        return arg;
+      }
+      
+      // Handle relative paths
+      if (arg === '~/Desktop' || arg === '~/Downloads') {
+        const homeDir = os.homedir();
+        return path.join(homeDir, arg.slice(2));
+      }
+      
       return arg;
     });
   }
@@ -54,20 +105,29 @@ class MCPBridge {
       // We're in WSL, need to adjust paths and commands
       args = this.translatePaths(args);
       
-      // Handle npx commands specially
+      // Handle different package managers
       if (command === 'npx') {
         command = 'npx';
       } else if (command === 'uvx') {
-        // uvx might not be available in WSL, use pip install instead
-        console.log(`⚠️  uvx not available in WSL, attempting npm alternative for ${serverName}`);
+        // uvx might not be available in WSL, use npm alternative
+        console.log(`⚠️  uvx not available, attempting npm alternative for ${serverName}`);
         command = 'npx';
       }
     }
 
+    // Sanitize environment variables (remove sensitive data)
     const env = {
       ...process.env,
       ...(config.env || {})
     };
+
+    // Remove or mask sensitive environment variables for logging
+    const logEnv = { ...env };
+    Object.keys(logEnv).forEach(key => {
+      if (key.includes('TOKEN') || key.includes('KEY') || key.includes('SECRET')) {
+        logEnv[key] = '***MASKED***';
+      }
+    });
 
     try {
       const childProcess = spawn(command, args, {
@@ -97,7 +157,11 @@ class MCPBridge {
         });
 
         childProcess.stderr.on('data', (data) => {
-          console.error(`❌ ${serverName} error:`, data.toString().trim());
+          const errorOutput = data.toString();
+          // Filter out sensitive information from error logs
+          const cleanError = errorOutput.replace(/ghp_[a-zA-Z0-9]+/g, '***TOKEN***')
+                                        .replace(/eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g, '***JWT***');
+          console.error(`❌ ${serverName} error:`, cleanError.trim());
         });
 
         childProcess.on('error', (error) => {
@@ -155,7 +219,6 @@ class MCPBridge {
     // Test filesystem server
     if (this.mcpServers.filesystem) {
       console.log('📁 Testing filesystem server...');
-      // Basic test - check if we can access the configured directories
       const args = this.mcpServers.filesystem.args;
       const directories = args.filter(arg => arg.startsWith('/') || arg.includes('Desktop') || arg.includes('Downloads'));
       
@@ -184,17 +247,12 @@ class MCPBridge {
       }
     }
 
-    // Test n8n server
-    if (this.mcpServers['n8n-mcp']) {
-      console.log('🔗 Testing N8N server...');
-      const apiUrl = this.mcpServers['n8n-mcp'].env?.N8N_API_URL;
-      const apiKey = this.mcpServers['n8n-mcp'].env?.N8N_API_KEY;
-      if (apiUrl && apiKey) {
-        console.log('✅ N8N configuration found');
-      } else {
-        console.log('⚠️  N8N configuration incomplete');
+    // Test other servers generically
+    Object.keys(this.mcpServers).forEach(serverName => {
+      if (!['filesystem', 'github'].includes(serverName)) {
+        console.log(`🔧 ${serverName} server configured`);
       }
-    }
+    });
   }
 
   async showAvailableTools() {

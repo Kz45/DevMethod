@@ -43,7 +43,7 @@
 ### Step 2: Local Git Setup
 ```bash
 # Navigate to DevMethod directory
-cd /mnt/c/Users/Stanis/Desktop/GitHub/DevMethod
+cd /path/to/your/DevMethod
 
 # Initialize git repository
 git init
@@ -283,5 +283,5 @@ Your DevMethod 2.0 framework is now complete and ready to help developers achiev
 
 **Next Command:**
 ```bash
-cd /mnt/c/Users/Stanis/Desktop/GitHub/DevMethod && git status
+cd /path/to/your/DevMethod && git status
 ```

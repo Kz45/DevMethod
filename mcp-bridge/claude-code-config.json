@@ -1,12 +1,12 @@
 {
   "mcp_bridge": {
     "enabled": true,
-    "config_source": "/mnt/c/Users/Stanis/AppData/Roaming/Claude/claude_desktop_config.json",
+    "config_source": "auto-detect",
     "bridge_mode": "stdio_proxy",
     "path_translation": {
       "windows_to_wsl": {
-        "C:\\Users\\Stanis\\": "/mnt/c/Users/Stanis/",
-        "/Users/Stanis/": "/mnt/c/Users/Stanis/"
+        "C:\\Users\\USERNAME\\": "/mnt/c/Users/USERNAME/",
+        "/Users/USERNAME/": "/mnt/c/Users/USERNAME/"
       }
     }
   },
@@ -14,7 +14,7 @@
     "filesystem": {
       "description": "File system operations with path translation",
       "status": "active",
-      "wsl_paths": ["/mnt/c/Users/Stanis/Desktop", "/mnt/c/Users/Stanis/Downloads"]
+      "wsl_paths": ["/mnt/c/Users/USERNAME/Desktop", "/mnt/c/Users/USERNAME/Downloads"]
     },
     "github": {
       "description": "GitHub API integration",
@@ -24,7 +24,7 @@
     "n8n-mcp": {
       "description": "N8N workflow automation",
       "status": "active",
-      "api_url": "https://n8n.srv891929.hstgr.cloud"
+      "api_url": "https://your-n8n-instance.com"
     },
     "playwright": {
       "description": "Web automation and testing",

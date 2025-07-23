@@ -2,7 +2,7 @@
 
 **Version**: 1.0  
 **Last Updated**: 2025-01-22  
-**Authors**: Stanis & Claude Code  
+**Authors**: DevMethod Contributors & Claude Code  
 
 ---
 

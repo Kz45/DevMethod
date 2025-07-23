@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Claude Code MCP Bridge Startup Script
+# Claude Code MCP Bridge Startup Script (Generic Version)
 # Connects Claude Code (WSL) with Claude Desktop MCPs (Windows)
 
 set -e
@@ -31,6 +31,20 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Auto-detect username
+detect_username() {
+    if [ -n "$USER" ]; then
+        echo "$USER"
+    elif [ -n "$USERNAME" ]; then
+        echo "$USERNAME"
+    else
+        echo "user"
+    fi
+}
+
+USERNAME=$(detect_username)
+log_info "Detected username: $USERNAME"
+
 # Check prerequisites
 check_requirements() {
     log_info "Checking requirements..."
@@ -53,15 +67,33 @@ check_requirements() {
     local npm_version=$(npm --version)
     log_success "npm found: v$npm_version"
     
-    # Check if Claude Desktop config exists
-    local config_path="/mnt/c/Users/Stanis/AppData/Roaming/Claude/claude_desktop_config.json"
-    if [ ! -f "$config_path" ]; then
-        log_error "Claude Desktop configuration not found at: $config_path"
+    # Check if Claude Desktop config exists (try multiple locations)
+    local config_paths=(
+        "/mnt/c/Users/$USERNAME/AppData/Roaming/Claude/claude_desktop_config.json"
+        "$HOME/AppData/Roaming/Claude/claude_desktop_config.json"
+        "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+        "$HOME/.config/claude/claude_desktop_config.json"
+        "$HOME/.claude/claude_desktop_config.json"
+    )
+    
+    local config_found=false
+    for config_path in "${config_paths[@]}"; do
+        if [ -f "$config_path" ]; then
+            log_success "Claude Desktop configuration found at: $config_path"
+            config_found=true
+            break
+        fi
+    done
+    
+    if [ "$config_found" = false ]; then
+        log_error "Claude Desktop configuration not found"
+        log_info "Searched in the following locations:"
+        for config_path in "${config_paths[@]}"; do
+            log_info "  - $config_path"
+        done
         log_info "Please make sure Claude Desktop is installed and configured with MCPs"
         exit 1
     fi
-    
-    log_success "Claude Desktop configuration found"
 }
 
 # Install dependencies
@@ -92,7 +124,12 @@ start_bridge() {
     log_info "Starting MCP Bridge..."
     
     local bridge_dir="$(dirname "$0")"
-    local bridge_script="$bridge_dir/claude-code-bridge.js"
+    local bridge_script="$bridge_dir/claude-code-bridge-generic.js"
+    
+    # Fallback to original bridge if generic doesn't exist
+    if [ ! -f "$bridge_script" ]; then
+        bridge_script="$bridge_dir/claude-code-bridge.js"
+    fi
     
     if [ ! -f "$bridge_script" ]; then
         log_error "Bridge script not found: $bridge_script"
@@ -124,10 +161,12 @@ trap cleanup SIGINT SIGTERM
 
 # Main execution
 main() {
-    echo "Claude Code to Claude Desktop MCP Bridge"
-    echo "======================================="
+    echo "Claude Code to Claude Desktop MCP Bridge (Generic Version)"
+    echo "========================================================="
     echo "This bridge allows Claude Code running in WSL to access"
     echo "MCPs configured in Claude Desktop on Windows host."
+    echo ""
+    echo "Detected username: $USERNAME"
     echo ""
     
     check_requirements
