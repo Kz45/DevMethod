@@ -1,0 +1,77 @@
+{
+  "extends": ["eslint:recommended"],
+  "plugins": ["complexity"],
+  "rules": {
+    // Complexity Limits (DevMethod Standards)
+    "complexity": ["error", {
+      "max": 10
+    }],
+    
+    // File and Function Size Limits
+    "max-lines": ["error", {
+      "max": 500,
+      "skipBlankLines": true,
+      "skipComments": true
+    }],
+    
+    "max-lines-per-function": ["error", {
+      "max": 50,
+      "skipBlankLines": true,
+      "skipComments": true,
+      "IIFEs": true
+    }],
+    
+    "max-statements": ["error", 20],
+    
+    "max-depth": ["error", 4],
+    
+    "max-nested-callbacks": ["error", 3],
+    
+    "max-params": ["error", 5],
+    
+    // Cognitive Complexity (requires plugin)
+    "cognitive-complexity": ["error", 15],
+    
+    // Additional Code Quality Rules
+    "no-duplicate-imports": "error",
+    "no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }],
+    
+    "prefer-const": "error",
+    
+    "no-var": "error",
+    
+    "arrow-body-style": ["error", "as-needed"],
+    
+    // Maintainability
+    "max-classes-per-file": ["error", 1],
+    
+    "no-magic-numbers": ["warn", {
+      "ignore": [0, 1, -1],
+      "ignoreArrayIndexes": true,
+      "enforceConst": true
+    }]
+  },
+  
+  "overrides": [
+    {
+      // Test files can be longer
+      "files": ["**/*.test.js", "**/*.spec.js", "**/*.test.ts", "**/*.spec.ts"],
+      "rules": {
+        "max-lines": ["error", 1000],
+        "max-lines-per-function": ["error", 100],
+        "max-statements": "off"
+      }
+    },
+    {
+      // Configuration files have different rules
+      "files": ["*.config.js", "*.config.ts", "webpack.*.js"],
+      "rules": {
+        "max-lines": "off",
+        "no-magic-numbers": "off"
+      }
+    }
+  ]
+}
