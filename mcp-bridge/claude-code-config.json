@@ -1,0 +1,56 @@
+{
+  "mcp_bridge": {
+    "enabled": true,
+    "config_source": "/mnt/c/Users/Stanis/AppData/Roaming/Claude/claude_desktop_config.json",
+    "bridge_mode": "stdio_proxy",
+    "path_translation": {
+      "windows_to_wsl": {
+        "C:\\Users\\Stanis\\": "/mnt/c/Users/Stanis/",
+        "/Users/Stanis/": "/mnt/c/Users/Stanis/"
+      }
+    }
+  },
+  "available_mcps": {
+    "filesystem": {
+      "description": "File system operations with path translation",
+      "status": "active",
+      "wsl_paths": ["/mnt/c/Users/Stanis/Desktop", "/mnt/c/Users/Stanis/Downloads"]
+    },
+    "github": {
+      "description": "GitHub API integration",
+      "status": "active",
+      "requires_token": true
+    },
+    "n8n-mcp": {
+      "description": "N8N workflow automation",
+      "status": "active",
+      "api_url": "https://n8n.srv891929.hstgr.cloud"
+    },
+    "playwright": {
+      "description": "Web automation and testing",
+      "status": "active"
+    },
+    "sequential-thinking": {
+      "description": "Enhanced reasoning capabilities",
+      "status": "active"
+    },
+    "blender": {
+      "description": "Blender 3D automation",
+      "status": "experimental"
+    },
+    "context7": {
+      "description": "Documentation context provider",
+      "status": "active",
+      "remote_url": "https://gitmcp.io/upstash/context7"
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": "/tmp/claude-code-mcp-bridge.log"
+  },
+  "performance": {
+    "timeout_ms": 30000,
+    "retry_attempts": 3,
+    "heartbeat_interval": 30000
+  }
+}
