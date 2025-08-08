@@ -72,7 +72,7 @@ graph TB
 ### Prerequisites
 - Node.js 18+ or Python 3.9+
 - Git
-- Claude Code or compatible AI assistant
+- AI assistant (Claude, GPT-4, etc.)
 
 ### 5-Minute Setup
 
@@ -226,8 +226,7 @@ See our [Community Showcase](docs/community/showcase.md) for more real-world imp
 - ✅ **Docker** + Kubernetes
 
 ### AI Assistants
-- ✅ **Claude Code** (Primary, recommended)
-- ✅ **Claude 3.5 Sonnet**
+- ✅ **Claude** (Primary, recommended)
 - ✅ **GPT-4** (Limited support)
 - ✅ **Local models** (Ollama, etc.)
 
